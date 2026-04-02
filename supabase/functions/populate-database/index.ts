@@ -69,7 +69,7 @@ Deno.serve(async (req: Request) => {
 
     // Insert umpires
     const umpires = [
-      { name: 'CB Bucknor', age: 57, years_of_experience: 28, is_retired: false, photo_url: '/cb-bucknor.webp' },
+      { name: 'CB Bucknor', age: 57, years_of_experience: 28, is_retired: false, photo_url: '/Screenshot_2026-04-02_at_12.16.35_AM.png' },
       { name: 'Chris Segal', age: 42, years_of_experience: 12, is_retired: false, photo_url: '/chris-segal.webp' },
       { name: 'Jordan Baker', age: 45, years_of_experience: 13, is_retired: false, photo_url: '/jordan-baker.webp' },
       { name: 'Tom Hanahan', age: 35, years_of_experience: 1, is_retired: false, photo_url: '/tom-hanahan.webp' },
