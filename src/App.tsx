@@ -309,7 +309,7 @@ function App() {
             <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-700 overflow-hidden mb-4">
               <div className="bg-gradient-to-r from-red-600 to-red-700 px-4 py-2 flex items-center justify-center gap-2">
                 <Trophy size={16} className="text-white" />
-                <span className="text-white font-bold text-sm uppercase tracking-wide">Hall of Shame</span>
+                <span className="text-white font-bold text-sm uppercase tracking-wide">Ump Leaderboard</span>
               </div>
               <div className="p-6 text-center">
                 <TrendingDown className="mx-auto mb-3 text-slate-600" size={48} />
@@ -324,7 +324,7 @@ function App() {
                 <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border-2 border-red-500 shadow-xl shadow-red-500/20 overflow-hidden">
                   <div className="bg-gradient-to-r from-red-600 to-red-700 px-4 py-2.5 flex items-center justify-center gap-2">
                     <Trophy size={16} className="text-white" />
-                    <span className="text-white font-bold text-sm uppercase tracking-wide">Hall of Shame</span>
+                    <span className="text-white font-bold text-sm uppercase tracking-wide">Ump Leaderboard</span>
                   </div>
 
                   <div className="p-5">
@@ -334,7 +334,7 @@ function App() {
                         alt={top10Stats[0].umpire.name}
                         className="w-24 h-24 rounded-full object-cover border-4 border-red-500 shadow-xl shadow-red-500/20 mb-3"
                       />
-                      <h2 className="text-3xl font-bold text-white mb-1">{top10Stats[0].umpire.name}</h2>
+                      <h2 className="text-3xl font-bold text-white mb-1">#1 {top10Stats[0].umpire.name}</h2>
                       <p className="text-slate-400 text-sm">
                         {top10Stats[0].umpire.age} years old • {top10Stats[0].umpire.years_of_experience} years experience
                       </p>
@@ -453,7 +453,7 @@ function App() {
             <div className="bg-slate-900/30 rounded-xl p-4 border border-slate-800">
               <h3 className="text-white font-semibold mb-2 text-sm flex items-center gap-2">
                 <Trophy size={16} className="text-red-500" />
-                Hall of Shame History
+                Ump Leaderboard History
               </h3>
               <p className="text-slate-400 text-xs mb-3">
                 Past weekly leaders - Click to view
