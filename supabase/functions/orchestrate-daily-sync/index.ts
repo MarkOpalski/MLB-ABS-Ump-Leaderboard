@@ -58,6 +58,7 @@ Deno.serve(async (req: Request) => {
 
       try {
         const sourceFunctionMap: Record<string, string> = {
+          "MLB Stats API": "sync-mlb-statsapi",
           "ESPN": "sync-espn-abs-tracker",
         };
 
