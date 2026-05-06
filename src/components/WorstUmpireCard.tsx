@@ -77,9 +77,6 @@ export function WorstUmpireCard({ stat, rank, weekNumber, isTopCard = false }: W
         />
         <div className="text-center">
           <h3 className="font-bold text-white text-2xl">{stat.umpire.name}</h3>
-          <p className="text-slate-400 text-sm">
-            {stat.umpire.age} years old • {stat.umpire.years_of_experience} years experience
-          </p>
         </div>
       </div>
 

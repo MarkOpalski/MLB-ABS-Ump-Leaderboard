@@ -25,7 +25,26 @@ function App() {
 
   useEffect(() => {
     loadAllTimeStats();
+    triggerBackgroundSync();
   }, []);
+
+  const triggerBackgroundSync = async () => {
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      await fetch(`${supabaseUrl}/functions/v1/orchestrate-daily-sync`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      // Reload data after sync completes
+      await Promise.all([loadWeeklyData(), loadHallOfShame(), loadAllTimeStats()]);
+    } catch {
+      // Silent — background sync failure shouldn't break the UI
+    }
+  };
 
   const loadAllTimeStats = async () => {
     try {
@@ -335,9 +354,6 @@ function App() {
                         className="w-24 h-24 rounded-full object-cover border-4 border-red-500 shadow-xl shadow-red-500/20 mb-3"
                       />
                       <h2 className="text-3xl font-bold text-white mb-1">#1 {top10Stats[0].umpire.name}</h2>
-                      <p className="text-slate-400 text-sm">
-                        {top10Stats[0].umpire.age} years old • {top10Stats[0].umpire.years_of_experience} years experience
-                      </p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 mb-4">
