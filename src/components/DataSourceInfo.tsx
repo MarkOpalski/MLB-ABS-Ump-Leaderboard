@@ -124,7 +124,7 @@ export function DataSourceInfo() {
                     {source.name}
                   </span>
                   {!source.is_active && (
-                    <span className="text-xs text-slate-600 italic">not configured</span>
+                    <span className="text-xs text-slate-600 italic">unavailable</span>
                   )}
                 </div>
                 {source.is_active && (
@@ -133,6 +133,9 @@ export function DataSourceInfo() {
                   </span>
                 )}
               </div>
+              {!source.is_active && source.notes && (
+                <p className="text-slate-600 text-xs mt-1 leading-snug">{source.notes}</p>
+              )}
             </div>
           ))}
         </div>

@@ -94,6 +94,7 @@ export interface DataSource {
   priority: number;
   last_successful_sync?: string;
   consecutive_failures: number;
+  notes?: string;
   created_at: string;
 }
 
