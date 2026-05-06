@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase, type DataSource, type SyncLog } from '../lib/supabase';
-import { RefreshCw, Database, CheckCircle2, AlertCircle } from 'lucide-react';
+import { RefreshCw, Database, CheckCircle2, AlertCircle, MinusCircle } from 'lucide-react';
 
 export function DataSourceInfo() {
   const [dataSources, setDataSources] = useState<DataSource[]>([]);
@@ -83,7 +83,7 @@ export function DataSourceInfo() {
     return `${diffDays}d ago`;
   };
 
-  const espnSource = dataSources.find(ds => ds.name === 'ESPN');
+  const primaryActiveSource = dataSources.find(ds => ds.is_active && ds.last_successful_sync);
 
   return (
     <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-800">
@@ -105,20 +105,33 @@ export function DataSourceInfo() {
           {dataSources.map(source => (
             <div
               key={source.id}
-              className="bg-slate-800/50 rounded p-2 border border-slate-700/50"
+              className={`rounded p-2 border ${
+                source.is_active
+                  ? 'bg-slate-800/50 border-slate-700/50'
+                  : 'bg-slate-900/30 border-slate-800/30'
+              }`}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  {source.consecutive_failures === 0 ? (
+                  {!source.is_active ? (
+                    <MinusCircle size={12} className="text-slate-600" />
+                  ) : source.consecutive_failures === 0 && source.last_successful_sync ? (
                     <CheckCircle2 size={12} className="text-green-400" />
                   ) : (
                     <AlertCircle size={12} className="text-yellow-400" />
                   )}
-                  <span className="text-white text-xs font-medium">{source.name}</span>
+                  <span className={`text-xs font-medium ${source.is_active ? 'text-white' : 'text-slate-600'}`}>
+                    {source.name}
+                  </span>
+                  {!source.is_active && (
+                    <span className="text-xs text-slate-600 italic">not configured</span>
+                  )}
                 </div>
-                <span className="text-slate-400 text-xs">
-                  {formatTimestamp(source.last_successful_sync)}
-                </span>
+                {source.is_active && (
+                  <span className="text-slate-400 text-xs">
+                    {formatTimestamp(source.last_successful_sync)}
+                  </span>
+                )}
               </div>
             </div>
           ))}
@@ -129,7 +142,7 @@ export function DataSourceInfo() {
         <div className="text-xs">
           <span className="text-slate-500">Last sync: </span>
           <span className="text-slate-300">
-            {espnSource ? formatTimestamp(espnSource.last_successful_sync) : 'Never'}
+            {primaryActiveSource ? formatTimestamp(primaryActiveSource.last_successful_sync) : 'Never'}
           </span>
         </div>
         <button

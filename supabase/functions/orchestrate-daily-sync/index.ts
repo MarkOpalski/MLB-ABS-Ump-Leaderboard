@@ -57,25 +57,37 @@ Deno.serve(async (req: Request) => {
       };
 
       try {
-        if (source.name === "ESPN") {
-          const espnUrl = `${supabaseUrl}/functions/v1/sync-espn-abs-tracker`;
-          step.functionUrl = espnUrl;
+        const sourceFunctionMap: Record<string, string> = {
+          "ESPN": "sync-espn-abs-tracker",
+        };
 
-          const response = await fetch(espnUrl, {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${supabaseAnonKey}`,
-              "Content-Type": "application/json",
-            },
-          });
+        const functionSlug = sourceFunctionMap[source.name];
 
-          const result = await response.json();
-          step.success = result.success;
-          step.data = result;
+        if (!functionSlug) {
+          step.success = false;
+          step.error = `No sync function implemented for source: ${source.name}`;
+          step.duration = Date.now() - stepStartTime;
+          steps.push(step);
+          continue;
+        }
 
-          if (!result.success) {
-            step.error = result.error || "Unknown error";
-          }
+        const functionUrl = `${supabaseUrl}/functions/v1/${functionSlug}`;
+        step.functionUrl = functionUrl;
+
+        const response = await fetch(functionUrl, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${supabaseAnonKey}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        const result = await response.json();
+        step.success = result.success;
+        step.data = result;
+
+        if (!result.success) {
+          step.error = result.error || "Unknown error";
         }
 
         step.duration = Date.now() - stepStartTime;
