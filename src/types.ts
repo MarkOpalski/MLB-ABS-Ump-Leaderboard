@@ -11,6 +11,10 @@ export interface Umpire {
   pitches_called?: number;
   external_source_id?: string;
   baseball_reference_url?: string;
+  season_challenges_total?: number;
+  season_challenges_overturned?: number;
+  season_overturn_rate?: number;
+  season_rank?: number;
   created_at: string;
 }
 
@@ -86,18 +90,6 @@ export interface WeeklyWinner {
   dateRange: string;
 }
 
-export interface DataSource {
-  id: string;
-  name: string;
-  base_url: string;
-  is_active: boolean;
-  priority: number;
-  last_successful_sync?: string;
-  consecutive_failures: number;
-  notes?: string;
-  created_at: string;
-}
-
 export interface SyncLog {
   id: string;
   data_source_id: string;
@@ -112,15 +104,3 @@ export interface SyncLog {
   created_at: string;
 }
 
-export interface DataConflict {
-  id: string;
-  umpire_id: string;
-  conflict_type: string;
-  source_1_name: string;
-  source_1_value: any;
-  source_2_name: string;
-  source_2_value: any;
-  resolved: boolean;
-  resolution?: string;
-  created_at: string;
-}

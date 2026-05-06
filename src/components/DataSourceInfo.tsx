@@ -1,40 +1,35 @@
 import { useEffect, useState } from 'react';
-import { supabase, type DataSource, type SyncLog } from '../lib/supabase';
-import { RefreshCw, Database, CheckCircle2, AlertCircle, MinusCircle } from 'lucide-react';
+import { supabase, type SyncLog } from '../lib/supabase';
+import { RefreshCw, Database, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export function DataSourceInfo() {
-  const [dataSources, setDataSources] = useState<DataSource[]>([]);
-  const [latestSync, setLatestSync] = useState<SyncLog | null>(null);
+  const [lastSync, setLastSync] = useState<SyncLog | null>(null);
+  const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
-    loadDataSources();
-    loadLatestSync();
+    loadLastSync();
   }, []);
 
-  const loadDataSources = async () => {
-    const { data } = await supabase
+  const loadLastSync = async () => {
+    const { data: source } = await supabase
       .from('data_sources')
-      .select('*')
-      .order('priority');
+      .select('last_successful_sync')
+      .eq('name', 'MLB Stats API')
+      .maybeSingle();
 
-    if (data) {
-      setDataSources(data);
+    if (source?.last_successful_sync) {
+      setLastSyncTime(source.last_successful_sync);
     }
-  };
 
-  const loadLatestSync = async () => {
-    const { data } = await supabase
+    const { data: log } = await supabase
       .from('sync_logs')
       .select('*')
       .order('sync_started_at', { ascending: false })
       .limit(1)
       .maybeSingle();
 
-    if (data) {
-      setLatestSync(data);
-    }
+    if (log) setLastSync(log);
   };
 
   const triggerSync = async () => {
@@ -43,110 +38,49 @@ export function DataSourceInfo() {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-      const response = await fetch(`${supabaseUrl}/functions/v1/orchestrate-daily-sync`, {
+      await fetch(`${supabaseUrl}/functions/v1/orchestrate-daily-sync`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${supabaseAnonKey}`,
+          Authorization: `Bearer ${supabaseAnonKey}`,
           'Content-Type': 'application/json',
         },
       });
 
-      const result = await response.json();
-
-      if (result.success) {
-        await loadDataSources();
-        await loadLatestSync();
-      } else {
-        console.error('Sync failed:', result.error);
-      }
+      await loadLastSync();
     } catch (error) {
-      console.error('Error triggering sync:', error);
+      console.error('Sync error:', error);
     } finally {
       setSyncing(false);
     }
   };
 
-  const formatTimestamp = (timestamp: string | undefined) => {
-    if (!timestamp) return 'Never';
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
+  const formatTimestamp = (ts: string) => {
+    const date = new Date(ts);
+    const diffMs = Date.now() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
-
     if (diffMins < 1) return 'Just now';
     if (diffMins < 60) return `${diffMins}m ago`;
-
     const diffHours = Math.floor(diffMins / 60);
     if (diffHours < 24) return `${diffHours}h ago`;
-
-    const diffDays = Math.floor(diffHours / 24);
-    return `${diffDays}d ago`;
+    return `${Math.floor(diffHours / 24)}d ago`;
   };
 
-  const primaryActiveSource = dataSources.find(ds => ds.is_active && ds.last_successful_sync);
+  const syncOk = lastSync?.status === 'success' || lastSync?.status === 'partial';
 
   return (
     <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-800">
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Database size={14} className="text-slate-400" />
-          <span className="text-slate-400 text-xs font-semibold">Data Sources</span>
-        </div>
-        <button
-          onClick={() => setShowDetails(!showDetails)}
-          className="text-slate-500 hover:text-slate-300 text-xs transition-colors"
-        >
-          {showDetails ? 'Hide' : 'Show'}
-        </button>
-      </div>
-
-      {showDetails && (
-        <div className="space-y-2 mb-3">
-          {dataSources.map(source => (
-            <div
-              key={source.id}
-              className={`rounded p-2 border ${
-                source.is_active
-                  ? 'bg-slate-800/50 border-slate-700/50'
-                  : 'bg-slate-900/30 border-slate-800/30'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {!source.is_active ? (
-                    <MinusCircle size={12} className="text-slate-600" />
-                  ) : source.consecutive_failures === 0 && source.last_successful_sync ? (
-                    <CheckCircle2 size={12} className="text-green-400" />
-                  ) : (
-                    <AlertCircle size={12} className="text-yellow-400" />
-                  )}
-                  <span className={`text-xs font-medium ${source.is_active ? 'text-white' : 'text-slate-600'}`}>
-                    {source.name}
-                  </span>
-                  {!source.is_active && (
-                    <span className="text-xs text-slate-600 italic">unavailable</span>
-                  )}
-                </div>
-                {source.is_active && (
-                  <span className="text-slate-400 text-xs">
-                    {formatTimestamp(source.last_successful_sync)}
-                  </span>
-                )}
-              </div>
-              {!source.is_active && source.notes && (
-                <p className="text-slate-600 text-xs mt-1 leading-snug">{source.notes}</p>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="flex items-center justify-between">
-        <div className="text-xs">
-          <span className="text-slate-500">Last sync: </span>
-          <span className="text-slate-300">
-            {primaryActiveSource ? formatTimestamp(primaryActiveSource.last_successful_sync) : 'Never'}
-          </span>
+          <span className="text-slate-400 text-xs font-semibold">MLB Stats API</span>
+          {lastSync && (
+            syncOk
+              ? <CheckCircle2 size={12} className="text-green-400" />
+              : <AlertCircle size={12} className="text-yellow-400" />
+          )}
+          {lastSyncTime && (
+            <span className="text-slate-500 text-xs">{formatTimestamp(lastSyncTime)}</span>
+          )}
         </div>
         <button
           onClick={triggerSync}
@@ -162,12 +96,10 @@ export function DataSourceInfo() {
         </button>
       </div>
 
-      {latestSync && latestSync.status === 'success' && (
-        <div className="mt-2 pt-2 border-t border-slate-800">
-          <div className="text-xs text-slate-400">
-            Last sync added {latestSync.records_added} new records, updated {latestSync.records_updated}
-          </div>
-        </div>
+      {lastSync?.records_added != null && lastSync.records_added > 0 && (
+        <p className="text-slate-600 text-xs mt-1.5">
+          Last sync: {lastSync.records_added} new challenges added
+        </p>
       )}
     </div>
   );
