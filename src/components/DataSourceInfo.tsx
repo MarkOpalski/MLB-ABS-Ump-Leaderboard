@@ -1,9 +1,17 @@
 import { useEffect, useState } from 'react';
-import { supabase, type SyncLog } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { RefreshCw, Database, CheckCircle2, AlertCircle } from 'lucide-react';
 
+// Only the fields the UI displays are requested: sync logs also carry internal
+// diagnostic text that has no business reaching the browser.
+type SyncSummary = {
+  status: 'running' | 'success' | 'failed' | 'partial';
+  records_added: number | null;
+  sync_started_at: string;
+};
+
 export function DataSourceInfo() {
-  const [lastSync, setLastSync] = useState<SyncLog | null>(null);
+  const [lastSync, setLastSync] = useState<SyncSummary | null>(null);
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
 
@@ -24,7 +32,7 @@ export function DataSourceInfo() {
 
     const { data: log } = await supabase
       .from('sync_logs')
-      .select('*')
+      .select('status, records_added, sync_started_at')
       .order('sync_started_at', { ascending: false })
       .limit(1)
       .maybeSingle();
